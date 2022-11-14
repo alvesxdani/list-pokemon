@@ -1,28 +1,49 @@
-function convertTypes(pokemonTypes) {
-  return pokemonTypes.map(
-    (typeSlot) => `<li class="type">${typeSlot.type.name}</li>`
-  );
-}
-
-function convertToHTML(pokemon) {
-  return `
-            <li class="pokemon">
-                <span class="number">#${pokemon.order}</span>
-                <span class="name">${pokemon.name}</span>
-                <div class="detail">
-                    <ol class="types">
-                    ${convertTypes(pokemon.types).join("")}
-                    </ol>
-                    <img src="${
-                      pokemon.sprites.other.dream_world.front_default
-                    }" alt="Imagem de um ${pokemon.name}" srcset="">
-                </div>
-            </li>
-  `;
-}
-
 const pokemonOl = document.getElementById("pokemonList");
+const btnLoad = document.getElementById("loadMoreButton");
+const maxPokemons = 151;
+const limit = 5;
+let offset = 0;
 
-pokeApi.getPokemons().then((pokemonList = []) => {
-  pokemonOl.innerHTML += pokemonList.map(convertToHTML).join("");
+function loadMore(offset, limit) {
+  pokeApi.getPokemons(offset, limit).then((pokemons = []) => {
+    const newHtml = pokemons
+      .map(
+        (pokemon) => `
+              <li class="pokemon ${pokemon.type}">
+                  <span class="number">#${pokemon.order}</span>
+                  <span class="name">${pokemon.name}</span>
+                  <div class="detail">
+                      <ol class="types">
+                      ${pokemon.types
+                        .map((type) => `<li class="type ${type}">${type}</li>`)
+                        .join("")}
+                      </ol>
+                      <img src="${pokemon.photo}" alt="Imagem de um ${
+          pokemon.name
+        }">
+                  </div>
+              </li>
+  `
+      )
+      .join("");
+
+    pokemonOl.innerHTML += newHtml;
+  });
+}
+
+loadMore(offset, limit);
+
+btnLoad.addEventListener("click", () => {
+  offset += limit
+
+  const qtdRecordNextPage = offset + limit
+
+  if(qtdRecordNextPage >= maxPokemons) {
+    const newLimit = maxPokemons - offset
+    loadMore(offset, newLimit)
+    return btnLoad.style.visibility = "hidden"
+  } else {
+    loadMore(offset, limit)
+  }
+
 });
